@@ -1,0 +1,21 @@
+esphome:
+  on_boot:
+    then:
+      - rtttl.play: "ready:d=16,0=4,b=120:g,c5"
+
+api:
+  on_client_connected: 
+    then:
+      - rtttl.play: "chirp:d=32,o=7,b=200:c,d,e"
+  on_client_disconnected: 
+    then:
+      - rtttl.play: "error:d4,o5,b=100:g,p,g"
+
+# 4. Buzzer
+output:
+  - platform: ledc
+    pin: ${buzzer_pin}
+    id: buzzer_out
+
+rtttl:
+  output: buzzer_out

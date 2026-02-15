@@ -1,0 +1,30 @@
+text_sensor:
+  - platform: template
+    name: "Zuletzt gescannte Spulen-ID"
+    id: last_scanned_nfc
+    icon: "mdi:nfc-variant"
+
+# 5. NFC
+i2c:
+  sda: ${i2c_sda_pin} #GPIO13
+  scl: ${i2c_scl_pin} #GPIO14
+  scan: True
+
+pn532_i2c:
+  id: nfc_reader
+  on_tag:
+    then:
+      - lambda: |-
+          // 1. ID vom Tag lesen und in Global speichern
+          // id(current_spool_id) = gelesene_id; 
+          // 2. Status auf "Laden" setzen für das Display
+          esphome::scale_logic::_appState = esphome::scale_logic::STATE_INFO; 
+                    
+      - if:
+          condition:
+            lambda: 'return id(current_spool_id) > 0;'
+          then:
+            - script.execute: fetch_spoolman_data
+          else:
+            - logger.log: "Leerer oder ungültiger Tag gescannt."
+            - lambda: 'esphome::scale_logic::_appState = esphome::scale_logic::STATE_MAIN;'

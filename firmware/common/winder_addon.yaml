@@ -1,0 +1,8 @@
+binary_sensor:
+  - platform: gpio
+    id: runout_sensor
+    name: "Runout Sensor"
+    pin:
+      number: ${runout_pin}
+#      inverted: True
+      mode: INPUT_PULLUP

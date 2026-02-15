@@ -1,0 +1,40 @@
+# Kopiere dies in dein lokales ESPHome Dashboard
+
+substitutions:
+# Projekt Informationen
+  namespace: "3dp"
+  esp_project: "filamentspoolscale"
+  esp_project_name: "Filament Spool Scale"
+  esp_project_version: '2026.02.00a'
+  device_comment: "Filament-Waage für Spoolman mit NFC Reader und Ender3 Display"
+  spoolman_ip: "192.168.0.1:7912"
+
+esphome:
+  project:
+    name: ${namespace}.${esp_project}
+    version: ${esp_project_version}
+  name: ${esp_project}
+  friendly_name: ${esp_project_name}
+  comment: ${device_comment}
+  name_add_mac_suffix: false
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+api:
+
+packages:
+  remote_package_shorthand: github://ChristophCaina/filamentscale/firmware/main.yaml@main
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "FilamentScale Config"
+
+ota:
+  - platform: esphome
+
+captive_portal:

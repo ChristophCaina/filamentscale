@@ -1,0 +1,68 @@
+http_request:
+  useragent: esphome/filamentscale
+
+api:
+  # ... deine bisherige api-Konfiguration (falls vorhanden) ...
+  actions:
+    - action: set_spool_id_manual
+      variables:
+        spool_id: int
+      then:
+        - lambda: 'id(current_spool_id) = spool_id;'
+        - script.execute: fetch_spoolman_data
+
+# Hier definieren wir die Sensoren, die die Daten halten
+sensor:
+  - platform: template
+    name: "Spoolman Remaining Weight"
+    id: spoolman_remaining_weight
+    unit_of_measurement: "g"
+    icon: "mdi:weight-gram"
+    accuracy_decimals: 1
+
+text_sensor:
+  - platform: template
+    id: spoolman_response_raw
+    internal: true 
+    on_value:
+      then:
+        - lambda: |-
+            // ArduinoJson V7 Syntax: Wir parsen direkt
+            auto json_doc = json::parse_json(x);
+            
+            // Bei ArduinoJson prüfen wir die Gültigkeit des Documents so:
+            if (!json_doc.as<JsonVariant>().isNull()) {
+              auto root = json_doc.as<JsonObject>();
+              
+              if (root.containsKey("remaining_weight")) {
+                float w = root["remaining_weight"];
+                id(spoolman_remaining_weight).publish_state(w);
+                
+                esphome::scale_logic::_appState = esphome::scale_logic::STATE_MAIN;
+                ESP_LOGI("spoolman", "Gewicht aus JSON: %.1f g", w);
+              }
+            } else {
+              ESP_LOGE("spoolman", "JSON ungültig oder leer!");
+            }
+
+script:
+  - id: fetch_spoolman_data
+    then:
+      - if:
+          condition:
+            lambda: 'return id(current_spool_id) > 0;'
+          then:
+            - http_request.get:
+                url: !lambda |-
+                  std::string url = "http://${spoolman_ip}/api/v1/spool/";
+                  url += std::to_string(id(current_spool_id));
+                  ESP_LOGI("spoolman", "URL: %s", url.c_str());
+                  return url;
+                capture_response: true
+                on_response:
+                  then:
+                    - text_sensor.template.publish:
+                        id: spoolman_response_raw
+                        state: !lambda "return body;"
+          else:
+            - lambda: 'esphome::scale_logic::_appState = esphome::scale_logic::STATE_MAIN;'

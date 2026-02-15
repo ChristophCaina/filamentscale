@@ -1,0 +1,52 @@
+sensor:
+  - platform: adc
+    pin: ${poti_pin}
+    id: stepper_speed_poti
+    name: "Geschwindigkeitsregler"
+    update_interval: 100ms
+    unit_of_measurement: "steps/s"
+    attenuation: 12db  # Wichtig für den vollen Bereich 0-3.3V
+    filters:
+    - median:
+        window_size: 7
+        send_every: 1
+    - sliding_window_moving_average:
+        window_size: 15
+        send_every: 1
+    - delta: 0.02  # Erst bei 2% Änderung wird ein neuer Wert gesendet
+    - calibrate_linear:
+      - 0.0 -> 0.0      # Poti ganz links = 0 Schritte/s
+      - 0.1 -> 50.0     # Kleiner "Jump" damit der Motor nicht bei 1 Hz brummt
+      - 1.0 -> 1600.0   # Poti ganz rechts = 1000 Schritte/s
+    on_value:
+      then:
+        - stepper.set_speed:
+            id: stepper_winder
+            # Hier skalieren wir: 0 bis 1.0 vom Poti -> 0 bis 1000 Schritte/s
+            speed: !lambda |-
+              if (x < 20.0) return 0.0; 
+              return x;
+
+# 6. Stepper-Motor
+stepper:
+  - platform: a4988
+    id: stepper_winder
+    step_pin: ${stepper_step_pin}
+    dir_pin: ${stepper_dir_pin}
+    max_speed: 1600.0
+    acceleration: 200.0
+    deceleration: 200.0
+
+script:
+  - id: run_motor_action
+    mode: restart
+    then:
+      - logger.log: "Motor-Aktion gestartet"
+      - stepper.set_target:
+          id: stepper_winder
+          target: 50000 # Eine definierte Menge
+      - wait_until:
+          condition:
+            lambda: 'return id(stepper_winder).current_position == id(stepper_winder).target_position;'
+      - logger.log: "Motor-Aktion beendet"
+

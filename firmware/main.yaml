@@ -1,0 +1,13 @@
+packages:
+  base: !include common/base.yaml
+    
+  scale: !include common/scale.yaml
+  spoolman: !include common/spoolman.yaml
+  nfc: !include common/nfc.yaml
+  stepper: !include common/stepper.yaml
+  winder_addon: !include common/winder_addon.yaml
+  
+  display: !include common/display.yaml
+  controls: !include common/controls.yaml
+  buzzer: !include common/buzzer.yaml
+

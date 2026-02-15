@@ -1,0 +1,51 @@
+sensor:
+  # 3.2 HX711 Wägezelle
+  - platform: hx711
+    name: "Gewicht"
+    id: filament_scale
+    dout_pin: ${hx711_dout_pin}    # TBD
+    clk_pin: ${hx711_clk_pin}      # GPIO22     # TBD
+    gain: 128
+    update_interval: 500ms
+    unit_of_measurement: "g"
+    accuracy_decimals: 1
+    icon: "mdi:scale"
+    filters:
+      - calibrate_linear:
+          - 0 -> 0
+          - 100000 -> 1000
+      - offset: !lambda 'return id(scale_offset) * -1.0;' # Zieht den gespeicherten Wert ab
+      - median:           # Anzeige Glätten
+          window_size: 7
+          send_every: 5
+          send_first_at: 1
+    on_value:
+      then:
+        - sensor.template.publish:
+            id: filament_weight
+            state: !lambda 'return x;'
+    
+  - platform: template
+    id: filament_weight
+    name: "Filament Gewicht Display"
+    unit_of_measurement: g
+    accuracy_decimals: 0
+
+text_sensor:
+  - platform: homeassistant
+    id: spool_tare_from_ha
+    entity_id: "sensor.spoolman_spool_9_tare_weight"
+    internal: true
+    on_value:
+      then:
+        - lambda: |-
+            // Wenn HA einen Wert schickt (z.B. "220"), speichern wir ihn in die Global
+            if (x.length() > 0) {
+              id(current_spool_tare) = atoi(x.c_str());
+              ESP_LOGI("NFC", "Tare-Gewicht von HA empfangen: %d g", id(current_spool_tare));
+            }
+
+
+
+
+
