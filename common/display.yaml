@@ -33,43 +33,44 @@ display:
       int s_tare  = id(current_spool_tare);
       int a_state = id(app_state);
       int m_idx   = id(menu_index);
-
+      
       // --- WEICHE NACH APP_STATE ---
-
-      if (a_state == 1) { 
+      if (a_state == 1) {   
         // --- ZUSTAND 1: HAUPTMENÜ (mit Pagination) ---
         it.rectangle(0, 0, 128, 64);
         it.line(0, 14, 128, 14);
         it.printf(64, 11, id(small), TextAlign::BASELINE_CENTER, "MENUE");
-
+        
         // Pagination Logik
         int items_per_page = 3;
         int current_page = (m_idx - 1) / items_per_page;
         int pos_on_page = (m_idx - 1) % items_per_page;
         int y_cursor = 0; // Initialisieren
-
+        
         if (current_page == 0) {
           it.print(15, 14, id(small), "1. Tarieren (Nullen)");
           it.print(15, 28, id(small), "2. ID manuell setzen");
           it.print(15, 42, id(small), "3. Info / IP");
-    
+          
           // Standard-Abstand auf Seite 1
           y_cursor = 14 + (pos_on_page * 14);
         } 
-
+        
         else if (current_page == 1) {
           if (has_addon) {
             it.print(15, 26, id(small), "4. Winder Mode");
             it.print(15, 39, id(small), "5. < ZURUECK");
+            
             // Abstand für zwei Einträge (Zeile 26 und 39)
             y_cursor = 26 + (pos_on_page * 13); 
           } else {
-          it.print(15, 26, id(small), "4. < ZURUECK");
-          // Es gibt nur ein Item, also Cursor fest auf Zeile 26
-          y_cursor = 26; 
+            it.print(15, 26, id(small), "4. < ZURUECK");
+            
+            // Es gibt nur ein Item, also Cursor fest auf Zeile 26
+            y_cursor = 26; 
           }
         }
-
+        
         // Cursor nur zeichnen, wenn eine gültige Position berechnet wurde
         if (y_cursor > 0) {
           it.print(5, y_cursor, id(small), ">");
@@ -78,25 +79,30 @@ display:
         // 3. Seitenindikator (Etwas nach oben gerückt, damit er nicht abgeschnitten wird)
         it.printf(124, 60, id(small), TextAlign::BASELINE_RIGHT, "%d/2", current_page + 1);
       }
-
+      
+      // In display.yaml (Zustand 2: ID Editor)
       else if (a_state == 2) {
-        // --- ZUSTAND 2: ID MANUELL SETZEN (EDITOR) ---
-        it.rectangle(0, 0, 128, 64);
-        it.line(0, 14, 128, 14); // Linie auf 14 (vorher 15)
-        it.printf(64, 11, id(small), TextAlign::BASELINE_CENTER, "WAEHLE SPOOL ID");
-
-        it.printf(64, 38, id(large), TextAlign::CENTER, "# %d", s_id);
-        
-        it.line(0, 50, 128, 50);
-        it.print(64, 58, id(small), TextAlign::BASELINE_CENTER, "D-Klick: OK | Long: Back");
+       it.rectangle(0, 0, 128, 64);
+       it.line(0, 14, 128, 14);
+       it.printf(64, 11, id(small), TextAlign::BASELINE_CENTER, "WAEHLE SPOOL ID");
+       
+       // Die ID groß in der Mitte
+       it.printf(64, 34, id(large), TextAlign::CENTER, "# %d", s_id);
+       
+       // Status-Einblendung direkt unter der Nummer
+       std::string status = id(spool_status_text).state;
+       Color status_color = (status == "AKTIV") ? Color::WHITE : Color::WHITE; // Bei SW Display egal
+       it.printf(64, 46, id(small), TextAlign::CENTER, "[ %s ]", status.c_str());
+       it.line(0, 50, 128, 50);
+       it.print(64, 58, id(small), TextAlign::BASELINE_CENTER, "D-Klick: OK | Long: Back");
       }
-
+      
       else if (a_state == 3) {
         // --- ZUSTAND 3: INFO SCREEN ---
         it.rectangle(0, 0, 128, 64);
         it.line(0, 14, 128, 14); // Linie auf 14 (vorher 15)
         it.printf(64, 11, id(small), TextAlign::BASELINE_CENTER, "SYSTEM INFO");
-
+        
         // IP Adresse (Etwas tiefer für bessere Zentrierung)
         it.printf(5, 25, id(small), "IP: %s", id(wifi_info_ip).state.c_str());
         
@@ -104,19 +110,19 @@ display:
         if (id(wifi_signal_strength).has_state()) {
           it.printf(5, 38, id(small), "WLAN: %.0f dBm", id(wifi_signal_strength).state);
         }
-
+        
         // Fusszeile mit Trenner
         it.line(0, 50, 128, 50);
         it.print(64, 59, id(small), TextAlign::BASELINE_CENTER, "Long: Back");
       }
-
+      
       else if (a_state == 4) {
         // --- ZUSTAND 4: WICKLER-MODUS ---
         it.filled_rectangle(0, 0, 128, 64, Color::BLACK);
         it.rectangle(0, 0, 128, 64);
         it.printf(64, 11, id(small), TextAlign::BASELINE_CENTER, "WINDING MODE");
         it.line(0, 14, 128, 14);
-
+        
         // Echtzeit-Gewicht während des Wickelns
         if (id(filament_scale).has_state()) {
           it.printf(5, 30, id(small), "Gewicht: %.1f g", id(filament_scale).state);
@@ -125,11 +131,12 @@ display:
         // Geschwindigkeit (Poti-Wert visualisieren)
         float speed_pct = id(stepper_speed_poti).state * 100.0; // 0-100%
         it.printf(5, 45, id(small), "Speed: %.0f %%", speed_pct);
+        
         // Ein einfacher Fortschrittsbalken:
         it.rectangle(70, 40, 50, 8); // Rahmen
         int bar_width = (int)(speed_pct * 0.48); // 48 Pixel max Breite (50 minus Rahmen)
         it.filled_rectangle(71, 41, bar_width, 6); // Füllung
-
+        
         // Status des Motors
         if (id(stepper_winder).current_position == id(stepper_winder).target_position) {
           it.print(64, 59, id(small), TextAlign::BASELINE_CENTER, "Klick: START | Long: Back");
@@ -137,34 +144,39 @@ display:
           it.print(64, 59, id(small), TextAlign::BASELINE_CENTER, "Klick: STOP | Long: Back");
         }
       }
-
+      
+      else if (a_state == 5) {
+        it.printf(64, 11, id(small), TextAlign::BASELINE_CENTER, "NEUER STANDORT");
+        it.printf(64, 34, id(medium), TextAlign::CENTER, "%s", id(spool_location_text).state.c_str());
+        it.printf(64, 58, id(small), TextAlign::CENTER, "%d / %d", id(location_index) + 1, id(total_locations));
+      }
+      
       else {
         // --- ZUSTAND 0: HAUPTBILDSCHIRM (WAAGE) ---
         it.rectangle(0, 0, 128, 64); 
         it.line(1, 14, 127, 14); // Linie auf 14
         it.line(41, 15, 41, 63); // Vertikale Linie startet erst unter dem Header
-
+        
         // Texte auf Y=10 mit CENTER_VERTICAL oder BASELINE_CENTER (Y=11)
         it.print(21, 11, id(small), TextAlign::BASELINE_CENTER, "SPOOL");
         it.strftime(44, 11, id(small), TextAlign::BASELINE_LEFT, "%d.%m.%Y", id(esptime).now());
         it.strftime(126, 11, id(small), TextAlign::BASELINE_RIGHT, "%H:%M", id(esptime).now());
-
+        
         // Linke Spalte: ID
         if (s_id != -1) {
            it.printf(21, 38, id(large), TextAlign::CENTER, "# %d", s_id);
         } else {
            it.print(21, 38, id(medium), TextAlign::CENTER, "N/A");
         }
-
+        
         // Rechte Spalte: Gewichts-Berechnung
         if (id(filament_scale).has_state()) {
           float brutto = id(filament_scale).state;
           float netto = brutto - (float)s_tare;
+          
           if (netto < 0) netto = 0;
-
           it.printf(84, 36, id(large), TextAlign::CENTER, "%.0f", netto);
           it.print(118, 36, id(small), "g");
-          
           it.line(42, 52, 127, 52);
           it.printf(84, 59, id(small), TextAlign::CENTER, "Spule: %dg", s_tare);
         }

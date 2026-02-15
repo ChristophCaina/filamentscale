@@ -1,8 +1,15 @@
+globals:
+  - id: location_index
+    type: int
+    initial_value: '0'
+  - id: total_locations
+    type: int
+    initial_value: '0'
+
 http_request:
   useragent: esphome/filamentscale
 
 api:
-  # ... deine bisherige api-Konfiguration (falls vorhanden) ...
   actions:
     - action: set_spool_id_manual
       variables:
@@ -10,6 +17,20 @@ api:
       then:
         - lambda: 'id(current_spool_id) = spool_id;'
         - script.execute: fetch_spoolman_data
+        
+    - action: update_spool_location
+      variables:
+        spool_id: int
+        location_name: string
+      then:
+        - http_request.post: # Spoolman nutzt oft POST oder PATCH für Teil-Updates
+            url: !lambda |-
+              return "http://${spoolman_ip}/api/v1/spool/" + std::to_string(spool_id);
+            json:
+              location: { name: !lambda "return location_name;" }
+            on_response:
+              then:
+                - logger.log: "Standort erfolgreich aktualisiert!"
 
 # Hier definieren wir die Sensoren, die die Daten halten
 sensor:
@@ -22,30 +43,60 @@ sensor:
 
 text_sensor:
   - platform: template
+    id: spool_status_text
+    name: "Spool Status"
+    initial_value: "Bereit"
+    
+  - platform: template
+    id: current_location_name
+    internal: true
+
+  - platform: template
     id: spoolman_response_raw
-    internal: true 
     on_value:
       then:
         - lambda: |-
-            // ArduinoJson V7 Syntax: Wir parsen direkt
             auto json_doc = json::parse_json(x);
+            if (json_doc.as<JsonVariant>().isNull()) {
+              id(spool_status_text).publish_state("ID UNGÜLTIG");
+              id(spoolman_remaining_weight).publish_state(NAN);
+              return;
+            }
+            auto root = json_doc.as<JsonObject>();
+            bool is_archived = root["archived"] | false;
             
-            // Bei ArduinoJson prüfen wir die Gültigkeit des Documents so:
-            if (!json_doc.as<JsonVariant>().isNull()) {
-              auto root = json_doc.as<JsonObject>();
-              
-              if (root.containsKey("remaining_weight")) {
-                float w = root["remaining_weight"];
-                id(spoolman_remaining_weight).publish_state(w);
-                
-                esphome::scale_logic::_appState = esphome::scale_logic::STATE_MAIN;
-                ESP_LOGI("spoolman", "Gewicht aus JSON: %.1f g", w);
-              }
+            if (is_archived) {
+              id(spool_status_text).publish_state("ARCHIVIERT");
+              id(spoolman_remaining_weight).publish_state(NAN);
             } else {
-              ESP_LOGE("spoolman", "JSON ungültig oder leer!");
+              id(spool_status_text).publish_state("AKTIV");
+              id(spoolman_remaining_weight).publish_state(root["remaining_weight"] | 0.0);
             }
 
 script:
+  script:
+  - id: fetch_location_list
+    then:
+      - http_request.get:
+          url: !lambda |-
+            return "http://${spoolman_ip}/api/v1/location";
+          on_response:
+            then:
+              - lambda: |-
+                  auto json_doc = json::parse_json(body);
+                  if (json_doc.as<JsonVariant>().isNull()) return;
+                    auto arr = json_doc.as<JsonArray>();
+                    
+                    id(total_locations) = arr.size();
+                    
+                    // Den Namen für den aktuell gewählten Index extrahieren
+                    if (id(location_index) < id(total_locations)) {
+                      JsonObject loc = arr[id(location_index)];
+                      id(current_location_name).publish_state(loc["name"] | "Unbekannt");
+                      // WICHTIG: Wir müssen uns die ID merken, um sie später zu senden
+                      id(selected_location_id) = loc["id"] | 0;
+                    }
+
   - id: fetch_spoolman_data
     then:
       - if:
