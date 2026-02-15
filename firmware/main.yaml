@@ -1,9 +1,56 @@
-logger:
-  level: DEBUG
+substitutions:
+# Projekt Informationen
+  namespace: "3dp"
+  esp_project: "filamentspoolscale"
+  esp_project_name: "Filament Spool Scale"
+  esp_project_version: '2026.02.00a'
+  device_comment: "Filament-Waage für Spoolman mit NFC Reader und Ender3 Display"
 
-packages:
-  base: !include common/base.yaml
-    
+# Spoolman IP
+  spoolman_ip: "192.168.0.1:7912"
+  
+# Wifi-Secrets
+  # Hier definieren wir Standardwerte (optional)
+  wifi_ssid: "" 
+  wifi_password: ""
+  ota_password: ""
+
+# Pins für dein Setup
+  status_led_pin: GPIO02
+  spi_clk_pin: GPIO18
+  spi_mosi_pin: GPIO23
+  display_cs_pin: GPIO17
+  rotary_enc_a_pin: GPIO32
+  rotary_enc_b_pin: GPIO33
+  rotary_enc_btn_pin: GPIO19
+  buzzer_pin: GPIO16 
+  hx711_dout_pin: GPIO21
+  hx711_clk_pin: GPIO22
+  i2c_sda_pin: GPIO13
+  i2c_scl_pin: GPIO14
+  stepper_step_pin: GPIO25
+  stepper_dir_pin: GPIO26
+  runout_pin: GPIO27
+  poti_pin: GPIO34
+  winder_connection_pin: GPIO05
+
+esphome:
+  project:
+    name: ${namespace}.${esp_project}
+    version: ${esp_project_version}
+    on_update: 
+      then:  
+  name: ${esp_project}
+  friendly_name: ${esp_project_name}
+  comment: ${device_comment}
+  name_add_mac_suffix: false
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+packages:    
   scale: !include common/scale.yaml
   spoolman: !include common/spoolman.yaml
   nfc: !include common/nfc.yaml
@@ -14,3 +61,82 @@ packages:
   controls: !include common/controls.yaml
   buzzer: !include common/buzzer.yaml
 
+external_components:
+  - source:
+      type: local
+      path: components
+    refresh: 0s
+#      type: git
+#      url: https://github.com/ChristophCaina/filamentscale/firmware/components/
+#      ref: main 
+#    refresh: 0s # Erzwingt das Prüfen bei jedem Durchlauf
+    components: [ scale_logic ]
+
+# Du musst die Komponente einmalig "aufrufen", damit die __init__.py läuft:
+scale_logic:
+
+# From Scale V3 - Via Gemini to ESPHome
+globals:
+  - id: app_state
+    type: int
+    initial_value: '0' # 0: MAIN, 1: MENU_NO_TAG, etc.
+    restore_value: no
+  - id: menu_index
+    type: int
+    initial_value: '1'
+    restore_value: no
+  - id: current_spool_id
+    type: int
+    initial_value: '0'
+    restore_value: yes
+  - id: current_spool_tare
+    type: int
+    initial_value: '0'
+    restore_value: yes
+  - id: scale_offset
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+
+# Enable logging
+logger:
+  level: DEBUG # Zeigt alle wichtigen Infos an
+  baud_rate: 0 # Schaltet den Hardware-Serial-Logger aus, falls du über USB flashen willst (optional)
+
+captive_portal:
+
+web_server:
+  port: 80
+
+sensor:
+  - platform: wifi_signal
+    name: "WLAN Signalstärke"
+    id: wifi_signal_strength
+    update_interval: 60s
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: ${winder_connection_pin}
+      mode: INPUT_PULLUP
+      inverted: true
+    id: addon_connected
+    name: "Winder Addon Status"
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Adresse"
+      id: wifi_info_ip
+    ssid:
+      name: "SSID"
+      id: wifi_info_ssid
+
+time:
+  - platform: homeassistant
+    id: esptime
+
+status_led:
+  pin:
+    number: ${status_led_pin}
+    inverted: true
