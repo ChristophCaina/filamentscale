@@ -1,4 +1,5 @@
-packages:    
+packages:
+  base: !include common/base.yaml
   scale: !include common/scale.yaml
   spoolman: !include common/spoolman.yaml
   nfc: !include common/nfc.yaml
