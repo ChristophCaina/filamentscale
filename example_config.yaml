@@ -5,7 +5,7 @@ substitutions:
   namespace: "3dp"
   esp_project: "filamentspoolscale"
   esp_project_name: "Filament Spool Scale"
-  esp_project_version: '2026.02.00a'
+  esp_project_version: '2026.02.001a'
   device_comment: "Filament-Waage für Spoolman mit NFC Reader und Ender3 Display"
   spoolman_ip: "192.168.0.1:7912"
 
