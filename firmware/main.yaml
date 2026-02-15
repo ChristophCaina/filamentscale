@@ -1,3 +1,6 @@
+logger:
+  level: DEBUG
+
 packages:
   base: !include common/base.yaml
     

@@ -52,10 +52,13 @@ esp32:
 
 external_components:
   - source:
-      type: git
-      url: https://github.com/ChristophCaina/filamentscale/firmware/components/
-      ref: main 
-    refresh: 0s # Erzwingt das Prüfen bei jedem Durchlauf
+      type: local
+      path: components
+    refresh: 0s
+#      type: git
+#      url: https://github.com/ChristophCaina/filamentscale/firmware/components/
+#      ref: main 
+#    refresh: 0s # Erzwingt das Prüfen bei jedem Durchlauf
     components: [ scale_logic ]
 
 # Du musst die Komponente einmalig "aufrufen", damit die __init__.py läuft:
