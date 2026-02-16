@@ -45,7 +45,6 @@ text_sensor:
   - platform: template
     id: spool_status_text
     name: "Spool Status"
-    initial_value: "Bereit"
     
   - platform: template
     id: current_location_name
