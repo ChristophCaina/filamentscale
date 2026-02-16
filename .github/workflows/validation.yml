@@ -23,12 +23,13 @@ jobs:
 
       - name: Run ESPHome Config Check
         run: |
-          # Wir füllen die secrets.yaml mit Dummy-Werten für die Validierung
+          # Wir erstellen eine temporäre secrets.yaml für den Test
+          # Damit werden alle Warnungen bzgl. fehlender Variablen gelöscht
           cat <<EOF > secrets.yaml
-          wifi_ssid: "dummy_ssid"
+          wifi_ssid: "GitHub-Test-WLAN"
           wifi_password: "dummy_password"
-          spoolman_ip: "127.0.0.1"
+          spoolman_ip: "192.168.1.1"
           EOF
           
-          # Jetzt findet ESPHome alle Variablen und den WiFi-Block
+          # Jetzt validieren wir die Hauptkonfiguration
           esphome config main.yaml
