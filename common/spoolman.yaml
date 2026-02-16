@@ -23,11 +23,12 @@ api:
         spool_id: int
         location_name: string
       then:
-        - http_request.post: # Spoolman nutzt oft POST oder PATCH für Teil-Updates
+        - http_request.post:
             url: !lambda |-
               return "http://${spoolman_ip}/api/v1/spool/" + std::to_string(spool_id);
-            json:
-              location: { name: !lambda "return location_name;" }
+            # Hier liegt der Fix: Wir bauen das JSON direkt im Lambda zusammen
+            json: !lambda |-
+              return "{\"location\": {\"name\": \"" + location_name + "\"}}";
             on_response:
               then:
                 - logger.log: "Standort erfolgreich aktualisiert!"
