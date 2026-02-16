@@ -31,7 +31,7 @@ substitutions:
   stepper_dir_pin: GPIO26
   runout_pin: GPIO27
   poti_pin: GPIO34
-  winder_connection_pin: GPIO05
+  winder_connection_pin: GPIO04
 
 esphome:
   project:
