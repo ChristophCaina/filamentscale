@@ -15,36 +15,36 @@ sensor:
     # Wir nutzen diese Trigger, um eine Variable zu steuern
     on_clockwise:
       - lambda: |-
-        if (id(app_state) == 1) {
-          // HAUPTMENÜ SCROLLEN (Zustand 1)
-          int max_idx = id(addon_connected).state ? 5 : 4;
-          id(menu_index) = min(max_idx, id(menu_index) + 1);
-          id(my_display).update();
-        } 
-        else if (id(app_state) == 2) {
-          // ID-WAHL SCROLLEN (Zustand 2)
-          id(current_spool_id)++;
-          id(fetch_spoolman_data).execute(); // NUR HIER die API triggern
-          id(my_display).update();
-        }
-
-    on_anticlockwise:
-      - lambda: |-
-        if (id(app_state) == 1) {
-          // HAUPTMENÜ SCROLLEN
-          if (id(menu_index) > 1) {
-            id(menu_index)--;
+          if (id(app_state) == 1) {
+            // HAUPTMENÜ SCROLLEN (Zustand 1)
+            int max_idx = id(addon_connected).state ? 5 : 4;
+            id(menu_index) = min(max_idx, id(menu_index) + 1);
             id(my_display).update();
-          }
-        } 
-        else if (id(app_state) == 2) {
-          // ID-WAHL SCROLLEN
-          if (id(current_spool_id) > 0) {
-            id(current_spool_id)--;
+          } 
+          else if (id(app_state) == 2) {
+            // ID-WAHL SCROLLEN (Zustand 2)
+            id(current_spool_id)++;
             id(fetch_spoolman_data).execute(); // NUR HIER die API triggern
             id(my_display).update();
           }
-        }
+
+    on_anticlockwise:
+      - lambda: |-
+          if (id(app_state) == 1) {
+            // HAUPTMENÜ SCROLLEN
+            if (id(menu_index) > 1) {
+              id(menu_index)--;
+              id(my_display).update();
+            }
+          } 
+          else if (id(app_state) == 2) {
+            // ID-WAHL SCROLLEN
+            if (id(current_spool_id) > 0) {
+              id(current_spool_id)--;
+              id(fetch_spoolman_data).execute(); // NUR HIER die API triggern
+              id(my_display).update();
+            }
+          }
 
   # 3.3 Rotary Encoder Button
 binary_sensor:
