@@ -15,23 +15,23 @@ sensor:
     # Wir nutzen diese Trigger, um eine Variable zu steuern
     on_clockwise:
       - lambda: |-
-        if (id(app_state) == 2) {
-          id(current_spool_id)++;
-          id(fetch_spoolman_data).execute(); // Sofort abfragen
-        }
-        // ... restliche Menü-Logik ...
-        id(my_display).update();
+          if (id(app_state) == 2) {
+            id(current_spool_id)++;
+            id(fetch_spoolman_data).execute(); // Sofort abfragen
+          }
+          // ... restliche Menü-Logik ...
+          id(my_display).update();
 
     on_anticlockwise:
       - lambda: |-
-        if (id(app_state) == 2) {
-          if (id(current_spool_id) > 0) {
-            id(current_spool_id)--;
-            id(fetch_spoolman_data).execute(); // Sofort abfragen
+          if (id(app_state) == 2) {
+            if (id(current_spool_id) > 0) {
+              id(current_spool_id)--;
+              id(fetch_spoolman_data).execute(); // Sofort abfragen
+            }
           }
-        }
-        // ... restliche Menü-Logik ...
-        id(my_display).update();
+          // ... restliche Menü-Logik ...
+          id(my_display).update();
 
   # 3.3 Rotary Encoder Button
 binary_sensor:
