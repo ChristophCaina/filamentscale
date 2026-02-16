@@ -1,0 +1,34 @@
+name: ESPHome Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install ESPHome
+        run: pip install esphome
+
+      - name: Run ESPHome Config Check
+        # Dieser Befehl simuliert das "Validate" aus dem Dashboard
+        run: |
+          # Wir erstellen Dummys für Dateien, die GitHub nicht kennt
+          touch secrets.yaml
+          esphome config main.yaml
+        env:
+          # Hier Dummy-Werte für deine Secrets, damit der Check nicht abbricht
+          WIFI_SSID: "dummy_ssid"
+          WIFI_PASSWORD: "dummy_password"
+          SPOOLMAN_IP: "127.0.0.1"  
