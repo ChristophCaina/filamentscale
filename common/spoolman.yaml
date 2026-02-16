@@ -79,7 +79,6 @@ text_sensor:
             }
 
 script:
-  script:
   - id: fetch_location_list
     then:
       - http_request.get:
