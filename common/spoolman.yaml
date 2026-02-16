@@ -29,9 +29,9 @@ api:
         - http_request.post:
             url: !lambda |-
               return "http://${spoolman_ip}/api/v1/spool/" + std::to_string(spool_id);
-              
-            json: !lambda |-
-              id(http_request_data) = "{\"location\": {\"name\": \"" + location_name + "\"}}";
+            # Wir senden den fertigen JSON-String direkt als body
+            body: !lambda |-
+              return "{\"location\": {\"name\": \"" + location_name + "\"}}";
             on_response:
               then:
                 - logger.log: "Standort erfolgreich aktualisiert!"
