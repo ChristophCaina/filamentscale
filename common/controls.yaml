@@ -20,13 +20,23 @@ sensor:
             int max_idx = id(addon_connected).state ? 5 : 4;
             id(menu_index) = min(max_idx, id(menu_index) + 1);
             id(my_display).update();
-          } 
+          }
+          
           else if (id(app_state) == 2) {
             // ID-WAHL SCROLLEN (Zustand 2)
             id(current_spool_id)++;
             id(fetch_spoolman_data).execute(); // NUR HIER die API triggern
             id(my_display).update();
           }
+          
+          else if (id(app_state) == 5) {
+            // NEU: LOCATION-BROWSER: Index hoch
+            if (id(location_index) < id(total_locations) - 1) {
+              id(location_index)++;
+              id(fetch_location_list).execute();
+            }
+          }
+          id(my_display).update();
 
     on_anticlockwise:
       - lambda: |-
@@ -36,7 +46,8 @@ sensor:
               id(menu_index)--;
               id(my_display).update();
             }
-          } 
+          }
+          
           else if (id(app_state) == 2) {
             // ID-WAHL SCROLLEN
             if (id(current_spool_id) > 0) {
@@ -45,6 +56,15 @@ sensor:
               id(my_display).update();
             }
           }
+          
+          else if (id(app_state) == 5) {
+            // NEU: LOCATION-BROWSER: Index runter
+            if (id(location_index) > 0) {
+              id(location_index)--;
+              id(fetch_location_list).execute();
+            }
+          }
+          id(my_display).update();
 
   # 3.3 Rotary Encoder Button
 binary_sensor:
