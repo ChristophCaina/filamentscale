@@ -5,6 +5,9 @@ globals:
   - id: total_locations
     type: int
     initial_value: '0'
+  - id: selected_location_id
+    type: int
+    initial_value: '0'
 
 http_request:
   useragent: esphome/filamentscale
