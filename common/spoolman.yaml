@@ -50,6 +50,11 @@ text_sensor:
   - platform: template
     id: current_location_name
     internal: true
+    
+  - platform: template
+    id: spool_location_text
+    name: "Spool Location"
+    internal: true
 
   - platform: template
     id: spoolman_response_raw
@@ -98,6 +103,7 @@ script:
                     }
 
   - id: fetch_spoolman_data
+    mode: restart
     then:
       - if:
           condition:
