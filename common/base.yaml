@@ -1,9 +1,3 @@
-sensor:
-  - platform: wifi_signal
-    name: "WLAN Signalstärke"
-    id: wifi_signal_strength
-    update_interval: 60s
-
 binary_sensor:
   - platform: gpio
     pin:
@@ -12,15 +6,6 @@ binary_sensor:
       inverted: true
     id: addon_connected
     name: "Winder Addon Status"
-
-text_sensor:
-  - platform: wifi_info
-    ip_address:
-      name: "IP Adresse"
-      id: wifi_info_ip
-    ssid:
-      name: "SSID"
-      id: wifi_info_ssid
 
 time:
   - platform: homeassistant

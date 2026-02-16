@@ -100,3 +100,18 @@ packages:
   display: !include common/display.yaml
   controls: !include common/controls.yaml
   buzzer: !include common/buzzer.yaml
+  
+sensor:
+  - platform: wifi_signal
+    name: "WLAN Signalstärke"
+    id: wifi_signal_strength
+    update_interval: 60s
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Adresse"
+      id: wifi_info_ip
+    ssid:
+      name: "SSID"
+      id: wifi_info_ssid
