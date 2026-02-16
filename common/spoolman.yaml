@@ -29,9 +29,9 @@ api:
         - http_request.post:
             url: !lambda |-
               return "http://${spoolman_ip}/api/v1/spool/" + std::to_string(spool_id);
-            # Hier liegt der Fix: Wir bauen das JSON direkt im Lambda zusammen
+              
             json: !lambda |-
-              return "{\"location\": {\"name\": \"" + location_name + "\"}}";
+              id(http_request_data) = "{\"location\": {\"name\": \"" + location_name + "\"}}";
             on_response:
               then:
                 - logger.log: "Standort erfolgreich aktualisiert!"
@@ -87,6 +87,7 @@ script:
       - http_request.get:
           url: !lambda |-
             return "http://${spoolman_ip}/api/v1/location";
+          capture_response: true
           on_response:
             then:
               - lambda: |-
