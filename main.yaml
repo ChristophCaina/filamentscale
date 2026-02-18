@@ -73,7 +73,7 @@ globals:
     initial_value: '0'
     restore_value: yes
   - id: current_spool_tare
-    type: int
+    type: float
     initial_value: '0'
     restore_value: yes
   - id: scale_offset
