@@ -105,7 +105,7 @@ script:
                       id(selected_location_id) = loc["id"] | 0;
                     }
 
-  - id: fetch_spoolman_data
+- id: fetch_spoolman_data
     mode: restart
     then:
       - lambda: |-
@@ -122,6 +122,8 @@ script:
                   content: |-
                     if (status_code == 200) {
                       auto json_doc = json::parse_json(body);
+                      // Sicherstellen, dass das JSON valide ist
+                      if (json_doc.as<JsonVariant>().isNull()) return;
                       auto root = json_doc.as<JsonObject>();
                     
                       // 1. Status & Ort
@@ -133,12 +135,9 @@ script:
                       // 2. Filament Details (Name & Typ)
                       std::string f_name = root["filament"]["name"] | "Unbekannt";
                       std::string f_type = root["filament"]["material"] | "???";
-                      // Hier könntest du einen weiteren Text-Sensor für das Display befüllen:
-                      // id(spool_filament_name).publish_state(f_name.c_str());
                     
-                      // 3. Gewichtsberechnung (Wichtig für deine Waage!)
+                      // 3. Gewichtsberechnung
                       float rem_weight = root["remaining_weight"] | 0.0f;
-                      // id(spool_remaining_weight).publish_state(rem_weight);
                     
                       ESP_LOGI("spoolman", "Spule geladen: %s (%s)", f_name.c_str(), f_type.c_str());
                     } else {
