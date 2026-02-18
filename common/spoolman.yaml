@@ -58,6 +58,16 @@ text_sensor:
     id: spool_location_text
     name: "Spool Location"
     internal: true
+    
+  - platform: template
+    id: spool_filament_name
+    name: "Aktuelles Filament"
+    icon: mdi:printer-3d-nozzle
+
+  - platform: template
+    id: spool_material_text
+    name: "Filament Material"
+    icon: mdi:database
 
   - platform: template
     id: spoolman_response_raw
