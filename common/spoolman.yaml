@@ -125,43 +125,29 @@ script:
           on_response:
             then:
               - lambda: |-
-                  if(HttpStatus_Code == 200) { 
-                    auto json_doc = json::parse_json(body);
-                    if (json_doc.as<JsonVariant>().isNull()) {
-                      id(spool_status_text).publish_state("SERVER FEHLER");
-                      return;
-                    }
-                    auto roort = json_doc.as<JsonObject>();
+                  auto json_doc = json::parse_json(body);
+                  if (json_doc.as<JsonVariant>().isNull()) {
+                    id(spool_status_text).publish_state("SERVER FEHLER");
+                    return;
+                  }
+                  auto roort = json_doc.as<JsonObject>();
                   
-                    // Prüfung: Ist es eine gültige Spule?
-                    if (root.containsKey("filament")) {
-                      // ERFOLG-PFAD
-                      bool archived = root["archived"] | false;
-                      id(spool_status_text).publish_state(archived ? "ARCHIVIERT" : "AKTIV");
+                  // Prüfung: Ist es eine gültige Spule?
+                  if (root.containsKey("filament")) {
+                    // ERFOLG-PFAD
+                    bool archived = root["archived"] | false;
+                    id(spool_status_text).publish_state(archived ? "ARCHIVIERT" : "AKTIV");
                     
-                      std::string f_name = root["filament"]["name"] | "Unbekannt";
-                      id(spool_filament_name).publish_state(f_name.c_str());
-                    
-                      std::string loc = root["location"]["name"] | "Kein Ort";
-                      id(spool_location_text).publish_state(loc.c_str());
-                    } 
-                    else if (root.containsKey("message")) {
-                      // FEHLER-PFAD (z.B. "No spool with ID...")
-                      std::string msg = root["message"] | "Fehler";
-                      id(spool_status_text).publish_state(msg.c_str());
-                      id(spool_location_text).publish_state("-");
-                      id(spool_filament_name).publish_state("N/A");
-                    }
-                  } else {
-                    // FEHLERFALL: Nachricht aus dem Body extrahieren
-                    auto json_doc = json::parse_json(body);
-                    if (!json_doc.as<JsonVariant>().isNull()) {
-                      auto root = json_doc.as<JsonObject>();
-                      std::string error_msg = root["message"] | "ID UNBEKANNT";
-                      // Wir senden die Nachricht direkt an den Status-Sensor
-                      id(spool_status_text).publish_state(error_msg.c_str());
-                    } else {
-                      id(spool_status_text).publish_state("HTTP FEHLER");
-                    }
+                    std::string f_name = root["filament"]["name"] | "Unbekannt";
+                    id(spool_filament_name).publish_state(f_name.c_str());
+                   
+                    std::string loc = root["location"]["name"] | "Kein Ort";
+                    id(spool_location_text).publish_state(loc.c_str());
+                  } 
+                  else if (root.containsKey("message")) {
+                    // FEHLER-PFAD (z.B. "No spool with ID...")
+                    std::string msg = root["message"] | "Fehler";
+                    id(spool_status_text).publish_state(msg.c_str());
                     id(spool_location_text).publish_state("-");
+                    id(spool_filament_name).publish_state("N/A");
                   }
