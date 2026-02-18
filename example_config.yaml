@@ -26,7 +26,7 @@ esp32:
 api:
 
 packages:
-  remote_package_shorthand: github://ChristophCaina/filamentscale/main.yaml@dev
+  remote_package_shorthand: github://ChristophCaina/filamentscale/main.yaml@main
 
 wifi:
   ssid: !secret wifi_ssid
