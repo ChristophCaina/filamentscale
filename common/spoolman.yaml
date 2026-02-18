@@ -105,42 +105,42 @@ script:
                       id(selected_location_id) = loc["id"] | 0;
                     }
 
-- id: fetch_spoolman_data
-    mode: restart
-    then:
-      - lambda: |-
-          // Reset der Anzeige während des Ladens
-          id(spool_status_text).publish_state("LÄDT...");
-          id(spool_location_text).publish_state("-");
-      - http_request.get:
-          url: !lambda |-
-            return "http://${spoolman_ip}/api/v1/spool/" + std::to_string(id(current_spool_id));
-          capture_response: true
-          on_response:
-            then:
-              - lambda:
-                  content: |-
-                    if (status_code == 200) {
-                      auto json_doc = json::parse_json(body);
-                      // Sicherstellen, dass das JSON valide ist
-                      if (json_doc.as<JsonVariant>().isNull()) return;
-                      auto root = json_doc.as<JsonObject>();
-                    
-                      // 1. Status & Ort
-                      bool archived = root["archived"] | false;
-                      std::string loc = root["location"]["name"] | "Kein Ort";
-                      id(spool_status_text).publish_state(archived ? "ARCHIVIERT" : "AKTIV");
-                      id(spool_location_text).publish_state(loc.c_str());
-                    
-                      // 2. Filament Details (Name & Typ)
-                      std::string f_name = root["filament"]["name"] | "Unbekannt";
-                      std::string f_type = root["filament"]["material"] | "???";
-                    
-                      // 3. Gewichtsberechnung
-                      float rem_weight = root["remaining_weight"] | 0.0f;
-                    
-                      ESP_LOGI("spoolman", "Spule geladen: %s (%s)", f_name.c_str(), f_type.c_str());
-                    } else {
-                      id(spool_status_text).publish_state("UNBEKANNT");
-                      id(spool_location_text).publish_state("-");
-                    }
+  - id: fetch_spoolman_data
+      mode: restart
+      then:
+        - lambda: |-
+            // Reset der Anzeige während des Ladens
+            id(spool_status_text).publish_state("LÄDT...");
+            id(spool_location_text).publish_state("-");
+        - http_request.get:
+            url: !lambda |-
+              return "http://${spoolman_ip}/api/v1/spool/" + std::to_string(id(current_spool_id));
+            capture_response: true
+            on_response:
+              then:
+                - lambda:
+                    content: |-
+                      if (status_code == 200) {
+                        auto json_doc = json::parse_json(body);
+                        // Sicherstellen, dass das JSON valide ist
+                        if (json_doc.as<JsonVariant>().isNull()) return;
+                        auto root = json_doc.as<JsonObject>();
+                          
+                        // 1. Status & Ort
+                        bool archived = root["archived"] | false;
+                        std::string loc = root["location"]["name"] | "Kein Ort";
+                        id(spool_status_text).publish_state(archived ? "ARCHIVIERT" : "AKTIV");
+                        id(spool_location_text).publish_state(loc.c_str());
+                     
+                        // 2. Filament Details (Name & Typ)
+                        std::string f_name = root["filament"]["name"] | "Unbekannt";
+                        std::string f_type = root["filament"]["material"] | "???";
+                          
+                        // 3. Gewichtsberechnung
+                        float rem_weight = root["remaining_weight"] | 0.0f;
+                          
+                        ESP_LOGI("spoolman", "Spule geladen: %s (%s)", f_name.c_str(), f_type.c_str());
+                      } else {
+                          id(spool_status_text).publish_state("UNBEKANNT");
+                          id(spool_location_text).publish_state("-");
+                        }
