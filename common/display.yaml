@@ -144,8 +144,10 @@ display:
         it.line(0, 14, 128, 14);
         
         // Echtzeit-Gewicht während des Wickelns
-        if (id(filament_scale).has_state()) {
-          it.printf(5, 30, id(small), "Gewicht: %.1f g", id(filament_scale).state);
+        //if (id(filament_scale).has_state()) {
+        if (id(hx711_raw).has_state()) {
+          //it.printf(5, 30, id(small), "Gewicht: %.1f g", id(filament_scale).state);
+          it.printf(5, 30, id(small), "Gewicht: %.1f g", id(hx711_raw).state);
         }
         
         // Geschwindigkeit (Poti-Wert visualisieren)
@@ -191,8 +193,10 @@ display:
         }
         
         // Rechte Spalte: Gewichts-Berechnung
-        if (id(filament_scale).has_state()) {
-          float brutto = id(filament_scale).state;
+        //if (id(filament_scale).has_state()) {
+        if (id(hx711_raw).has_state()) {
+          //float brutto = id(filament_scale).state;
+          float brutto = id(hx711_raw).state;
           // Wir nutzen das Tare-Gewicht aus der Global
           float netto = brutto - (float)s_tare;
           
