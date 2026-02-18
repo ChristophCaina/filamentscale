@@ -53,6 +53,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/ChristophCaina/filamentscale
+      ref: dev
       # Kein Unterordner nötig, da 'components' im Root liegt
     components: [ scale_logic ]
     
