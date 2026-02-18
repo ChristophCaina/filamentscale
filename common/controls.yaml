@@ -112,8 +112,7 @@ binary_sensor:
                 // Logik für das Hauptmenü (m_idx entscheidet)
                 if (id(menu_index) == 1) {
                   // 1. Tarieren
-                  //id(scale_offset) += id(filament_scale).state;
-                  id(scale_offset) += id(hx711_raw).state;
+                  id(scale_offset) += id(filament_scale).state;
                   id(app_state) = 0;
                 } 
                 
