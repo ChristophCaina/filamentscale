@@ -53,7 +53,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/ChristophCaina/filamentscale
-      ref: dev
+      ref: main
     components: [ scale_logic ]
     
 scale_logic:
