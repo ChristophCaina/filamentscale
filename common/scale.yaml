@@ -1,33 +1,54 @@
+globals:
+  - id: scale_offset
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: current_spool_tare
+    type: int
+    restore_value: yes
+    initial_value: '0'
+
 sensor:
-  # 3.2 HX711 Wägezelle
   - platform: hx711
     name: "Gewicht"
     id: filament_scale
-    dout_pin: ${hx711_dout_pin}    # TBD
-    clk_pin: ${hx711_clk_pin}      # GPIO22     # TBD
+    dout_pin: ${hx711_dout_pin}
+    clk_pin: ${hx711_clk_pin}
     gain: 128
-    update_interval: 500ms
+    update_interval: 500ms # Etwas schneller für das Kalibrieren
     unit_of_measurement: "g"
     accuracy_decimals: 1
     icon: "mdi:scale"
+    # filters removed for testing
     filters:
       - calibrate_linear:
-          - 0 -> 0
-          - 100000 -> 1000
-      - offset: !lambda 'return id(scale_offset) * -1.0;' # Zieht den gespeicherten Wert ab
-      - median:           # Anzeige Glätten
-          window_size: 7
-          send_every: 5
-          send_first_at: 1
+          # Wir definieren zwei Punkte, die weit genug auseinander liegen:
+          # Werte anschließend an reale Messwerte anpassen.
+          - -171000 -> 0      # Dein aktueller Leerlauf-Wert
+          - 300000 -> 3000    # Ein grober Test-Wert (3kg bei 300k Rohwert)
+      - lambda: |-
+          return x - id(scale_offset);
+      - median:
+          window_size: 15
+          send_every: 1
+      - sliding_window_moving_average:
+          window_size: 10
+          send_every: 1
     on_value:
       then:
         - sensor.template.publish:
             id: filament_weight
-            state: !lambda 'return x;'
-    
+            state: !lambda 'return x - id(scale_offset);'
+        # debug Ausgabe
+        - lambda: |-
+            // Manuelle Umrechnung zum Testen im Log
+            float test_gramm = (x + 171000.0) / 470.0; 
+            ESP_LOGD("debug", "Roh: %.0f | Test-Gramm: %.2f", x, test_gramm);
+      
   - platform: template
     id: filament_weight
     name: "Filament Gewicht Display"
+    internal: true
     unit_of_measurement: g
     accuracy_decimals: 0
 
@@ -41,7 +62,7 @@ text_sensor:
         - lambda: |-
             // Wenn HA einen Wert schickt (z.B. "220"), speichern wir ihn in die Global
             if (x.length() > 0) {
-              id(current_spool_tare) = atoi(x.c_str());
+              id(current_spool_tare) = atof(x.c_str());
               ESP_LOGI("NFC", "Tare-Gewicht von HA empfangen: %d g", id(current_spool_tare));
             }
 

@@ -1,13 +1,26 @@
+globals:
+  - id: app_state
+    type: int
+    initial_value: '0' # 0: MAIN, 1: MENU_NO_TAG, etc.
+    restore_value: no
+  - id: menu_index
+    type: int
+    initial_value: '1'
+    restore_value: no
+
 font:
   - file: "gfonts://Silkscreen"
     id: small
     size: 8
   - file: "gfonts://Silkscreen"
     id: medium
-    size: 13
-  - file: "gfonts://JetBrains Mono"
+    size: 10
+  - file: "gfonts://Silkscreen"
     id: large
-    size: 18
+    size: 15
+  - file: "gfonts://Silkscreen"
+    id: spool_id_large
+    size: 20
 
 # 1. SPI Bus (Hardware-Pins für ESP32)
 spi:
@@ -83,7 +96,7 @@ display:
       // In display.yaml (Zustand 2: ID Editor)
       else if (a_state == 2) {
         // 1. Titel ganz oben
-        it.printf(64, 2, id(small), TextAlign::TOP_CENTER, "Wähle Spule ID:");
+        it.printf(64, 2, id(small), TextAlign::TOP_CENTER, "Waehle Spule ID:");
         
         // 2. Die ID groß (etwas höher schieben)
         it.printf(64, 12, id(large), TextAlign::TOP_CENTER, "# %d", id(current_spool_id));
@@ -161,17 +174,18 @@ display:
       else {
         // --- ZUSTAND 0: HAUPTBILDSCHIRM (WAAGE) ---
         it.rectangle(0, 0, 128, 64); 
-        it.line(1, 14, 127, 14); // Linie auf 14
-        it.line(41, 15, 41, 63); // Vertikale Linie startet erst unter dem Header
+        it.line(1, 14, 127, 14);
+        it.line(41, 15, 41, 63);
         
-        // Texte auf Y=10 mit CENTER_VERTICAL oder BASELINE_CENTER (Y=11)
         it.print(21, 11, id(small), TextAlign::BASELINE_CENTER, "SPOOL");
         it.strftime(44, 11, id(small), TextAlign::BASELINE_LEFT, "%d.%m.%Y", id(esptime).now());
         it.strftime(126, 11, id(small), TextAlign::BASELINE_RIGHT, "%H:%M", id(esptime).now());
         
-        // Linke Spalte: ID
+        // Linke Spalte: ID & Material
         if (s_id != -1) {
-           it.printf(21, 38, id(large), TextAlign::CENTER, "# %d", s_id);
+           it.printf(21, 30, id(spool_id_large), TextAlign::CENTER, "#%d", s_id);
+           // NEU: Materialtyp anzeigen (z.B. PETG)
+           it.printf(21, 52, id(small), TextAlign::CENTER, "%s", id(spool_material_text).state.c_str());
         } else {
            it.print(21, 38, id(medium), TextAlign::CENTER, "N/A");
         }
@@ -179,12 +193,17 @@ display:
         // Rechte Spalte: Gewichts-Berechnung
         if (id(filament_scale).has_state()) {
           float brutto = id(filament_scale).state;
+          // Wir nutzen das Tare-Gewicht aus der Global
           float netto = brutto - (float)s_tare;
           
           if (netto < 0) netto = 0;
-          it.printf(84, 36, id(large), TextAlign::CENTER, "%.0f", netto);
-          it.print(118, 36, id(small), "g");
-          it.line(42, 52, 127, 52);
-          it.printf(84, 59, id(small), TextAlign::CENTER, "Spule: %dg", s_tare);
+          
+          // Große Netto-Anzeige
+          it.printf(84, 34, id(large), TextAlign::CENTER, "%.0f", netto);
+          it.print(118, 34, id(small), "g");
+          
+          it.line(42, 48, 127, 48);
+          // Untere Zeile: Brutto oder Tare zur Info
+          it.printf(84, 58, id(small), TextAlign::BASELINE_CENTER, "Brutto: %.0fg", brutto);
         }
-      }  
+      }

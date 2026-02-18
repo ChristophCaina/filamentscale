@@ -53,33 +53,10 @@ external_components:
   - source:
       type: git
       url: https://github.com/ChristophCaina/filamentscale
-      # Kein Unterordner nötig, da 'components' im Root liegt
+      ref: dev
     components: [ scale_logic ]
     
 scale_logic:
-
-# From Scale V3 - Via Gemini to ESPHome
-globals:
-  - id: app_state
-    type: int
-    initial_value: '0' # 0: MAIN, 1: MENU_NO_TAG, etc.
-    restore_value: no
-  - id: menu_index
-    type: int
-    initial_value: '1'
-    restore_value: no
-  - id: current_spool_id
-    type: int
-    initial_value: '0'
-    restore_value: yes
-  - id: current_spool_tare
-    type: int
-    initial_value: '0'
-    restore_value: yes
-  - id: scale_offset
-    type: float
-    restore_value: yes
-    initial_value: '0.0'
 
 # Enable logging
 logger:

@@ -8,6 +8,10 @@ globals:
   - id: selected_location_id
     type: int
     initial_value: '0'
+  - id: current_spool_id
+    type: int
+    initial_value: '0'
+    restore_value: yes
 
 http_request:
   useragent: esphome/filamentscale
@@ -58,6 +62,16 @@ text_sensor:
     id: spool_location_text
     name: "Spool Location"
     internal: true
+    
+  - platform: template
+    id: spool_filament_name
+    name: "Aktuelles Filament"
+    icon: mdi:printer-3d-nozzle
+
+  - platform: template
+    id: spool_material_text
+    name: "Filament Material"
+    icon: mdi:database
 
   - platform: template
     id: spoolman_response_raw
@@ -91,25 +105,21 @@ script:
           on_response:
             then:
               - lambda: |-
+                  // Wir nutzen auch hier content, um konsistent zu bleiben
                   auto json_doc = json::parse_json(body);
                   if (json_doc.as<JsonVariant>().isNull()) return;
-                    auto arr = json_doc.as<JsonArray>();
-                    
-                    id(total_locations) = arr.size();
-                    
-                    // Den Namen für den aktuell gewählten Index extrahieren
-                    if (id(location_index) < id(total_locations)) {
-                      JsonObject loc = arr[id(location_index)];
-                      id(current_location_name).publish_state(loc["name"] | "Unbekannt");
-                      // WICHTIG: Wir müssen uns die ID merken, um sie später zu senden
-                      id(selected_location_id) = loc["id"] | 0;
-                    }
+                  auto arr = json_doc.as<JsonArray>();
+                  id(total_locations) = arr.size();
+                  if (id(location_index) < id(total_locations)) {
+                    JsonObject loc = arr[id(location_index)];
+                    id(current_location_name).publish_state(loc["name"] | "Unbekannt");
+                    id(selected_location_id) = loc["id"] | 0;
+                  }
 
   - id: fetch_spoolman_data
     mode: restart
     then:
       - lambda: |-
-          // Reset der Anzeige während des Ladens
           id(spool_status_text).publish_state("LÄDT...");
           id(spool_location_text).publish_state("-");
       - http_request.get:
@@ -119,28 +129,29 @@ script:
           on_response:
             then:
               - lambda: |-
-                  if (status_code == 200) {
-                    auto json_doc = json::parse_json(body);
-                    auto root = json_doc.as<JsonObject>();
-                    
-                    // 1. Status & Ort
+                  auto json_doc = json::parse_json(body);
+                  if (json_doc.as<JsonVariant>().isNull()) {
+                    id(spool_status_text).publish_state("SERVER FEHLER");
+                    return;
+                  }
+                  auto root = json_doc.as<JsonObject>();
+                  
+                  // Prüfung: Ist es eine gültige Spule?
+                  if (root.containsKey("filament")) {
+                    // ERFOLG-PFAD
                     bool archived = root["archived"] | false;
-                    std::string loc = root["location"]["name"] | "Kein Ort";
                     id(spool_status_text).publish_state(archived ? "ARCHIVIERT" : "AKTIV");
-                    id(spool_location_text).publish_state(loc.c_str());
                     
-                    // 2. Filament Details (Name & Typ)
                     std::string f_name = root["filament"]["name"] | "Unbekannt";
-                    std::string f_type = root["filament"]["material"] | "???";
-                    // Hier könntest du einen weiteren Text-Sensor für das Display befüllen:
-                    // id(spool_filament_name).publish_state(f_name.c_str());
-                    
-                    // 3. Gewichtsberechnung (Wichtig für deine Waage!)
-                    float rem_weight = root["remaining_weight"] | 0.0f;
-                    // id(spool_remaining_weight).publish_state(rem_weight);
-                    
-                    ESP_LOGI("spoolman", "Spule geladen: %s (%s)", f_name.c_str(), f_type.c_str());
-                  } else {
-                    id(spool_status_text).publish_state("UNBEKANNT");
+                    id(spool_filament_name).publish_state(f_name.c_str());
+                   
+                    std::string loc = root["location"]["name"] | "Kein Ort";
+                    id(spool_location_text).publish_state(loc.c_str());
+                  } 
+                  else if (root.containsKey("message")) {
+                    // FEHLER-PFAD (z.B. "No spool with ID...")
+                    std::string msg = root["message"] | "Fehler";
+                    id(spool_status_text).publish_state(msg.c_str());
                     id(spool_location_text).publish_state("-");
+                    id(spool_filament_name).publish_state("N/A");
                   }
