@@ -130,7 +130,7 @@ script:
                     id(spool_status_text).publish_state("SERVER FEHLER");
                     return;
                   }
-                  auto roort = json_doc.as<JsonObject>();
+                  auto root = json_doc.as<JsonObject>();
                   
                   // Prüfung: Ist es eine gültige Spule?
                   if (root.containsKey("filament")) {
