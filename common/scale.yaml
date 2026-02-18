@@ -1,3 +1,13 @@
+globals:
+  - id: scale_offset
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: current_spool_tare
+    type: int
+    restore_value: yes
+    initial_value: '0'
+
 sensor:
   - platform: hx711
     name: "Gewicht"
@@ -27,7 +37,7 @@ sensor:
       then:
         - sensor.template.publish:
             id: filament_weight
-            state: !lambda 'return x;
+            state: !lambda 'return x;'
     
   - platform: template
     id: filament_weight
