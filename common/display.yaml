@@ -18,6 +18,9 @@ font:
   - file: "gfonts://Silkscreen"
     id: large
     size: 15
+  - file: "gfonts://Silkscreen"
+    id: spool_id_large
+    size: 20
 
 # 1. SPI Bus (Hardware-Pins für ESP32)
 spi:
@@ -180,7 +183,7 @@ display:
         
         // Linke Spalte: ID & Material
         if (s_id != -1) {
-           it.printf(21, 30, id(large), TextAlign::CENTER, "#%d", s_id);
+           it.printf(21, 30, id(spool_id_large), TextAlign::CENTER, "#%d", s_id);
            // NEU: Materialtyp anzeigen (z.B. PETG)
            it.printf(21, 52, id(small), TextAlign::CENTER, "%s", id(spool_material_text).state.c_str());
         } else {

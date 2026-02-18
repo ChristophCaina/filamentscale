@@ -28,8 +28,8 @@ sensor:
           # Diese Werte musst du später ermitteln:
           # 1. Wert bei leerer Waage
           # 2. Wert mit bekanntem Gewicht (z.B. 500g Wasser)
-          - 0 -> 0
-          - 100000 -> 1000 
+          - -174000 -> 0
+          - 0 -> 1740
       - lambda: |-
           // Hier ziehen wir den globalen Offset (Tarierung) ab
           return x - id(scale_offset);
