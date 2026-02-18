@@ -9,40 +9,69 @@ globals:
     initial_value: '0'
 
 sensor:
+#  - platform: hx711
+#    name: "Gewicht"
+#    id: filament_scale
+#    dout_pin: ${hx711_dout_pin}
+#    clk_pin: ${hx711_clk_pin}
+#    gain: 128
+#    update_interval: 200ms # Etwas schneller für das Kalibrieren
+#    unit_of_measurement: "g"
+#    accuracy_decimals: 1
+#    icon: "mdi:scale"
+#    filters:
+#      - calibrate_linear:
+#          # Wir definieren zwei Punkte, die weit genug auseinander liegen:
+#          - -171000 -> 0      # Dein aktueller Leerlauf-Wert
+#          - 300000 -> 3000    # Ein grober Test-Wert (3kg bei 300k Rohwert)
+#      - lambda: |-
+#          return x - id(scale_offset);
+#      - median:
+#          window_size: 15
+#          send_every: 1
+#      - sliding_window_moving_average:
+#          window_size: 10
+#          send_every: 1
+#    on_value:
+#      then:
+#        - sensor.template.publish:
+#            id: filament_weight
+#            state: !lambda 'return x;'
+            
   - platform: hx711
-    name: "Gewicht"
-    id: filament_scale
+    name: "HX711 Rohwert"
+    id: hx711_raw
     dout_pin: ${hx711_dout_pin}
     clk_pin: ${hx711_clk_pin}
     gain: 128
-    update_interval: 200ms # Etwas schneller für das Kalibrieren
-    unit_of_measurement: "g"
-    accuracy_decimals: 1
-    icon: "mdi:scale"
-    filters:
-      - calibrate_linear:
-          # Wir definieren zwei Punkte, die weit genug auseinander liegen:
-          - -171000 -> 0      # Dein aktueller Leerlauf-Wert
-          - 300000 -> 3000    # Ein grober Test-Wert (3kg bei 300k Rohwert)
-      - lambda: |-
-          return x - id(scale_offset);
-      - median:
-          window_size: 15
-          send_every: 1
-      - sliding_window_moving_average:
-          window_size: 10
-          send_every: 1
+    update_interval: 500ms
+    # Wir lassen hier ALLE Filter weg, um die pure Hardware zu sehen!
     on_value:
       then:
-        - sensor.template.publish:
-            id: filament_weight
-            state: !lambda 'return x;'
+        - lambda: |-
+            // Manuelle Umrechnung zum Testen im Log
+            float test_gramm = (x + 171000.0) / 470.0; 
+            ESP_LOGD("debug", "Roh: %.0f | Test-Gramm: %.2f", x, test_gramm);
     
   - platform: template
-    id: filament_weight
     name: "Filament Gewicht Display"
-    unit_of_measurement: g
-    accuracy_decimals: 0
+    id: filament_weight
+    unit_of_measurement: "g"
+    accuracy_decimals: 1
+    # Dieser Sensor holt sich den Wert direkt aus dem Rohwert-Check
+    lambda: |-
+      float raw = id(hx711_raw).state;
+      if (isnan(raw)) return {};
+      // Eine ganz simple lineare Formel: (Rohwert - Nullpunkt) / Teiler
+      // Der Teiler 470 ist ein Schätzwert für 1g
+      return (raw + 171000.0) / 470.0;
+      
+#  - platform: template
+#    id: filament_weight
+#    name: "Filament Gewicht Display"
+#    internal: true
+#    unit_of_measurement: g
+#    accuracy_decimals: 0
 
 text_sensor:
   - platform: homeassistant
