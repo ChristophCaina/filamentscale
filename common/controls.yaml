@@ -84,12 +84,14 @@ binary_sensor:
         then:
           - lambda: |-
               if (id(app_state) == 2) {
-                // Wenn wir im ID-Editor waren, jetzt Daten holen
-                id(fetch_spoolman_data).execute();
-                ESP_LOGI("UI", "ID #%d ausgewählt, lade Daten...", id(current_spool_id));
+                if (id(spool_status_text).state == "UNBEKANNT") {
+                  // Fehlerton oder Warnung, keine Aktion möglich
+                  ESP_LOGE("ui", "Auswahl ungültig - Spule existiert nicht!");
+                } else {
+                  // Gültige ID! Jetzt Location setzen oder zurück zum Hauptmenü
+                  id(app_state) = 0; 
+                }
               }
-              // Zurück zur Waage
-              id(app_state) = 0; 
               id(my_display).update();
 
       # EINFACHKLICK

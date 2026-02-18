@@ -82,19 +82,26 @@ display:
       
       // In display.yaml (Zustand 2: ID Editor)
       else if (a_state == 2) {
-       it.rectangle(0, 0, 128, 64);
-       it.line(0, 14, 128, 14);
-       it.printf(64, 11, id(small), TextAlign::BASELINE_CENTER, "WAEHLE SPOOL ID");
-       
-       // Die ID groß in der Mitte
-       it.printf(64, 34, id(large), TextAlign::CENTER, "# %d", s_id);
-       
-       // Status-Einblendung direkt unter der Nummer
-       std::string status = id(spool_status_text).state;
-       Color status_color = (status == "AKTIV") ? Color::WHITE : Color::WHITE; // Bei SW Display egal
-       it.printf(64, 46, id(small), TextAlign::CENTER, "[ %s ]", status.c_str());
-       it.line(0, 50, 128, 50);
-       it.print(64, 58, id(small), TextAlign::BASELINE_CENTER, "D-Klick: OK | Long: Back");
+        // 1. Titel ganz oben
+        it.printf(64, 2, id(small), TextAlign::TOP_CENTER, "Wähle Spule ID:");
+        
+        // 2. Die ID groß (etwas höher schieben)
+        it.printf(64, 12, id(large), TextAlign::TOP_CENTER, "# %d", id(current_spool_id));
+        
+        // 3. Status-Bereich (Invertiert bei Fehler)
+        if (id(spool_status_text).state == "UNBEKANNT") {
+          // Schwarzer Balken für "Fehler"
+          it.filled_rectangle(0, 34, 128, 16); 
+          it.printf(64, 42, id(medium), Color(0), TextAlign::CENTER, "ID UNGÜLTIG"); 
+        } else {
+          // Normale Status-Anzeige (Aktiv / Archiviert)
+          std::string status = id(spool_status_text).state;
+          it.printf(64, 42, id(medium), TextAlign::CENTER, "[ %s ]", status.c_str());
+        }
+        
+        // 4. Footer mit Bedienhinweis
+        it.line(0, 52, 128, 52);
+        it.printf(64, 60, id(small), TextAlign::BASELINE_CENTER, "D-Klick: OK | Long: Back");
       }
       
       else if (a_state == 3) {
