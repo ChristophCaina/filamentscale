@@ -20,19 +20,18 @@ sensor:
     accuracy_decimals: 1
     icon: "mdi:scale"
     filters:
-      - median: # Erst glätten
-          window_size: 7
-          send_every: 5
-          send_first_at: 1
       - calibrate_linear:
-          # Diese Werte musst du später ermitteln:
-          # 1. Wert bei leerer Waage
-          # 2. Wert mit bekanntem Gewicht (z.B. 500g Wasser)
-          - -175000 -> 0      # Dein ungefährer Nullpunkt
-          - -650000 -> 1000
+          # Wir definieren zwei Punkte, die weit genug auseinander liegen:
+          - -171000 -> 0      # Dein aktueller Leerlauf-Wert
+          - 300000 -> 3000    # Ein grober Test-Wert (3kg bei 300k Rohwert)
       - lambda: |-
-          // Hier ziehen wir den globalen Offset (Tarierung) ab
           return x - id(scale_offset);
+      - median:
+          window_size: 15
+          send_every: 1
+      - sliding_window_moving_average:
+          window_size: 10
+          send_every: 1
     on_value:
       then:
         - sensor.template.publish:
