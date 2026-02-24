@@ -6,14 +6,6 @@ substitutions:
   esp_project_version: '2026.02.002a'
   device_comment: "Filament-Waage für Spoolman mit NFC Reader und Ender3 Display"
 
-# Spoolman IP
-#  spoolman_ip: ""
-  
-# Wifi-Secrets
-#  wifi_ssid: "" 
-#  wifi_password: ""
-#  ota_password: ""
-
 # Pins für dein Setup
   status_led_pin: GPIO02
   spi_clk_pin: GPIO18
@@ -58,7 +50,6 @@ external_components:
     
 scale_logic:
 
-# Enable logging
 logger:
 
 captive_portal:
