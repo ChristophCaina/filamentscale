@@ -1,18 +1,16 @@
-# 3. Sensoren & Eingabe
 sensor:
-#  3.1 Rotary Encoder Drehung
+# Rotary Encoder Drehung
   - platform: rotary_encoder
     name: "Rotary Encoder"
     id: my_encoder
     restore_mode: ALWAYS_ZERO 
     pin_a:
-      number: ${rotary_enc_a_pin} #GPIO32          # R + // UP
+      number: ${rotary_enc_a_pin}
       mode: INPUT_PULLUP
     pin_b:
-      number: ${rotary_enc_b_pin} #GPIO33          # R - // DOWN
+      number: ${rotary_enc_b_pin}
       mode: INPUT_PULLUP
-    resolution: 1
-    # Wir nutzen diese Trigger, um eine Variable zu steuern
+    resolution:
     on_clockwise:
       - lambda: |-
           if (id(app_state) == 1) {
@@ -66,13 +64,13 @@ sensor:
           }
           id(my_display).update();
 
-  # 3.3 Rotary Encoder Button
+  # Rotary Encoder Button
 binary_sensor:
   - platform: gpio
     id: encoder_button
     name: "Encoder Button"
     pin:
-      number: ${rotary_enc_btn_pin} #GPIO19          # BTN
+      number: ${rotary_enc_btn_pin}
       inverted: true
       mode: INPUT_PULLUP
     on_multi_click:
